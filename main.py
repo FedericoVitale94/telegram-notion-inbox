@@ -64,7 +64,8 @@ def run(timeout=10):
                 handle(msg)
             elif msg:
                 log.warning("ignored message from unauthorized user %s", msg.get("from", {}).get("id"))
-            # the offset moves on only after the item is saved in Notion (handle raises if Notion fails)
+            # confirmed only once the item is handled: if handle raises (e.g. Notion is down) the loop exits before
+            # this line and Telegram resends the message next time. Strangers' messages are skipped on purpose.
             offset = update_id + 1
             save_offset(offset)
         _cost_alert()
