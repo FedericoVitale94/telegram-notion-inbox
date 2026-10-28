@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template: install.sh replaces __LABEL__, __ROOT__ (code) and __HOME__ (instance folder) -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>__LABEL__</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__ROOT__/.venv/bin/python</string>
+        <string>__ROOT__/main.py</string>
+        <string>--listen</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__HOME__</string>
+    <!-- Homebrew ffmpeg: launchd starts with a minimal PATH -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>INBOX_HOME</key>
+        <string>__HOME__</string>
+    </dict>
+    <!-- at login -->
+    <key>RunAtLoad</key>
+    <true/>
+    <!-- keeps running; if it stops (error, yt-dlp upgrade) launchd restarts it -->
+    <key>KeepAlive</key>
+    <true/>
+    <!-- at least 30 seconds between restarts, so a startup failure does not loop -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+    <key>StandardOutPath</key>
+    <string>__HOME__/logs/launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/logs/launchd.log</string>
+</dict>
+</plist>

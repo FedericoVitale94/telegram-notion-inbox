@@ -1,0 +1,172 @@
+# Copy to config.toml and edit. Every prompt the bot sends is built from these values.
+
+[brand]
+# Who the saved items are for. Used in every prompt.
+description = "a person who saves articles, books, videos, guides, recipes and notes to come back to later"
+# Language for titles, summaries, analyses and drafts.
+language = "English"
+
+[ui]
+# Language of the texts the bot writes in Notion pages (section headings, details) and on Telegram: en or it.
+# Keep the language an existing INBOX was created with: drafts and questions find a page's text by its headings.
+language = "en"
+# Any single text can be replaced here, e.g. checks_ok = "All fine: words and opening." (keys in i18n.py).
+[ui.strings]
+
+[notion]
+# Names of the INBOX properties and statuses, if your database uses other ones. Defaults shown commented.
+# statuses = ["To review", "Good idea", "Discarded", "Used"]   # to review, good idea, discarded, used
+# similar_type = "url"     # "relation" if "Similar content" is a relation to your archive (see custom.py)
+[notion.properties]
+# title = "Title"
+# category = "Category"
+# platform = "Platform"
+# url = "URL"
+# saved = "Saved"
+# status = "Status"
+# topic = "Topic"
+# tags = "Tags"
+# message_id = "Telegram message ID"
+# chat_id = "Telegram chat ID"
+# error = "Error"
+# book = "Book"
+# author = "Author"
+# reading = "Reading time (min)"
+# score = "Idea score"               # creator mode
+# covered = "Already covered"        # creator mode
+# similar = "Similar content"        # creator mode
+# draft_written = "Draft written"    # creator mode
+
+[categories]
+# Used when nothing else fits or classification fails.
+fallback = "other"
+# Optional: the category for books. Its pages take the book's title as their title.
+book = "book"
+# Optional: the category for an Instagram/TikTok/YouTube link when classification fails (default: fallback).
+# social_fallback = "video"
+
+[categories.list]
+# Your categories: one line each, name = how to recognize it (the model reads the description).
+# Add, rename or delete freely; keep the ones named above in the list. New names appear in Notion by themselves.
+# To skip the guessing, add a hashtag to your message: "#recipe", "#personal_note" (or "#personalnote").
+article = "an article, blog post or long read to read later"
+book = "one specific book: a recommendation, review, quote or store page"
+video = "a video to watch later"
+guide = "tutorials, how-tos, practical tips"
+recipe = "cooking"
+personal_note = "reminders, lists, notes to self"
+other = "anything else"
+
+[categories.forced]
+# Categories the classifier never picks: you choose them with a hashtag or a group topic, and the item is saved
+# as it is, with no analysis (title = first line). E.g. notes about improving this bot:
+# bot_idea = "ideas for improving the bot"
+
+[categories.aliases]
+# Short hashtags for a category: "#r" -> recipe.
+# r = "recipe"
+
+[topics]
+# Options of the "Tags" multi-select. Zero or more per item.
+names = ["work", "health", "money", "travel", "technology", "culture", "other"]
+
+[reading]
+# Web pages get an estimated reading time when their main text has at least min_words words.
+words_per_minute = 220
+min_words = 300
+# Weekly digest: short reads (up to digest_short_minutes) and long ones still to review.
+digest_short_minutes = 10
+digest_short = 3
+digest_long = 2
+
+[books]
+# Book details (year, pages, ISBN, publisher, cover) from Open Library, free and without a key.
+open_library = true
+
+[telegram]
+# Delete your messages once they are saved in Notion and analyzed. Messages with an error, files that could not
+# be saved in Notion and questions to the agent stay. Telegram allows deleting only within 48 hours; in a group
+# the bot must be an admin with the right to delete messages.
+delete_saved = false
+# Save photos, files and voice messages in the Notion page (up to 20 MB each; your Notion plan may allow less).
+upload_files = true
+# Group with topics: "/here saved", "/here alerts", "/here <category>" in a topic.
+here_command = "here"
+saved_word = "saved"
+alerts_word = "alerts"
+
+[costs]
+# Monthly spending limit on Anthropic, in euros; 0 = no limit. When reached, items are saved without analysis
+# and questions pause until the 1st; you get an alert at 80% and at 100%. Spending is in the weekly digest.
+monthly_limit_eur = 0
+# Fallback USD per euro if the European Central Bank's daily rate cannot be read.
+# usd_per_eur = 0       # set it to a recent ECB rate if you want a fallback
+# Prices in USD per million tokens, if they change (defaults in costs.py):
+# [costs.prices.claude-sonnet-5-5]
+# input = 2.0
+# output = 10.0
+# cache_read = 0.10
+# cache_write = 2.50
+
+[agent]
+# Questions: a message starting with "?" or "/<command>" is answered by Claude, which searches and reads INBOX,
+# changes statuses (more than 3 pages only after you confirm) and adds notes to pages. Needs Anthropic.
+# Roughly a few cents per question. Model: ANTHROPIC_MODEL_AGENT in .env.
+enabled = true
+command = "ask"                    # /ask
+daily_limit = 30                   # questions per day
+max_steps = 12                     # model calls per question
+web_searches = 3                   # web searches per question; 0 to turn web search off
+
+[creator]
+# Creator mode, off by default: for people who publish content and save ideas for it.
+# When on, items in idea_category get a 1-5 score, a check against what you already published,
+# a script draft in your voice and a source search, as set in [archive], [drafts] and [sources] below.
+# Drafts and source searches cost money (see README). Add idea_category to categories.list first, e.g.
+# idea = "the topic fits what I publish, whatever the format. The topic decides, not the format"
+enabled = false
+idea_category = "idea"
+
+# --- Creator mode only: [archive], [drafts], [sources] ---
+
+[archive]
+# Optional and read-only: a Notion database with what you already published.
+# Used to flag ideas you already covered and, if it holds scripts, as style examples for drafts.
+# Leave database_id empty to skip both.
+database_id = ""
+title_property = "Name"            # title or text property
+text_properties = ["Description"]  # more text used to match ideas
+url_property = ""                  # optional URL property
+date_property = ""                 # optional date property
+script_property = ""               # optional: full script text, shown as examples for drafts
+score_property = ""                # optional number: higher = performed better (picks the examples)
+
+[drafts]
+enabled = true
+min_score = 3                      # only ideas scored at least this (1-5) get a draft
+voice_file = "prompts/voice.md"    # your style rules (start from prompts/voice.example.md)
+examples = 8                       # archive scripts shown as examples
+min_words = 160
+max_words = 220
+
+[sources]
+# For the best ideas, Claude searches the web and lists sources confirming or contradicting the key facts.
+# Web search is billed by Anthropic per search (about 1 cent each) on top of tokens.
+enabled = true
+min_score = 4
+max_searches = 3
+
+[digest]
+# Weekly Telegram message: what is still "To review" (in creator mode: the best ideas still to review).
+enabled = true
+weekday = 6                        # 0 = Monday ... 6 = Sunday
+min_score = 4                      # creator mode only
+
+[updates]
+# yt-dlp breaks when Instagram or TikTok change: upgrade it automatically once a week.
+yt_dlp_weekly = true
+
+[video]
+# TikTok blocks automated downloads. yt-dlp can impersonate a browser (needs curl_cffi).
+# Off by default: check TikTok's terms before turning it on.
+tiktok_impersonate = false

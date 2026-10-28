@@ -1,0 +1,17 @@
+# Template: install.sh replaces __LABEL__, __USER__, __ROOT__ (code) and __HOME__ (instance folder)
+[Unit]
+Description=Telegram -> Notion inbox bot (__LABEL__)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+WorkingDirectory=__HOME__
+Environment=INBOX_HOME=__HOME__
+ExecStart=__ROOT__/.venv/bin/python __ROOT__/main.py --listen
+# keeps running; if it stops (error, yt-dlp upgrade) systemd restarts it, at most every 30 seconds
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

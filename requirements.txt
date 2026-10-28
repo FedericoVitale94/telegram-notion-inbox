@@ -1,0 +1,5 @@
+requests>=2.31
+python-dotenv>=1.0
+anthropic>=1.0
+yt-dlp>=2026.10.26  # update often: Instagram and TikTok change frequently
+curl_cffi  # only needed with [video] tiktok_impersonate = true

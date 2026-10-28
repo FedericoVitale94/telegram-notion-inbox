@@ -1,0 +1,11 @@
+.env
+config.toml
+!tests/fixtures/**/config.toml
+prompts/voice.md
+.venv/
+cache/
+logs/
+__pycache__/
+.DS_Store
+_backup_*/
+instances/

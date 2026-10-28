@@ -1,0 +1,77 @@
+# Istanza di prova in italiano: stessa struttura di un'istanza personale, contenuti neutri.
+[brand]
+description = "un archivio personale di prova su leggende e luoghi"
+language = "italiano"
+
+[ui]
+language = "it"
+[ui.strings]
+checks_ok = "Tutto ok: parole e apertura."
+
+[notion]
+statuses = ["Da vedere", "Idea valida", "Scartata", "Usata"]
+similar_type = "relation"
+[notion.properties]
+title = "Titolo"
+category = "Categoria"
+platform = "Piattaforma"
+url = "URL"
+saved = "Data salvataggio"
+status = "Stato"
+topic = "Argomento"
+tags = "Filone"
+message_id = "Telegram message ID"
+chat_id = "Telegram chat ID"
+error = "Errore"
+book = "Libro"
+author = "Autore"
+reading = "Tempo di lettura (min)"
+score = "Punteggio idea"
+covered = "Già trattato"
+similar = "Contenuto simile"
+draft_written = "Bozza scritta"
+
+[categories]
+fallback = "altro"
+book = "libro"
+social_fallback = "idea_video"
+[categories.list]
+idea_video = "l'argomento è una leggenda o un luogo misterioso"
+libro = "un libro preciso"
+articolo = "un articolo da leggere"
+ricetta = "cucina"
+nota_personale = "promemoria"
+altro = "tutto il resto"
+[categories.forced]
+idea_bot = "idee per migliorare il bot"
+[categories.aliases]
+idea = "idea_video"
+nota = "nota_personale"
+bot = "idea_bot"
+migliorie = "idea_bot"
+
+[topics]
+names = ["folklore", "luoghi", "altro"]
+
+[creator]
+enabled = true
+idea_category = "idea_video"
+
+[drafts]
+voice_file = "prompts/voce.md"
+min_score = 3
+
+[sources]
+enabled = false
+
+[telegram]
+delete_saved = true
+here_command = "qui"
+saved_word = "salvati"
+alerts_word = "avvisi"
+
+[agent]
+command = "chiedi"
+
+[costs]
+monthly_limit_eur = 10

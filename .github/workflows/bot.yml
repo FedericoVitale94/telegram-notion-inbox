@@ -1,0 +1,54 @@
+# Alternative to running on your computer: runs the bot every hour on GitHub Actions.
+# Disabled until you enable it (see docs/hosting.md). Use EITHER this OR the LaunchAgent, never both.
+name: bot
+on:
+  schedule:
+    - cron: "7 * * * *"  # every hour at minute 7 (UTC)
+  workflow_dispatch:      # "Run workflow" button to start it by hand
+concurrency:
+  group: bot              # like the lock file: never two runs at once
+  cancel-in-progress: false
+jobs:
+  run:
+    if: vars.BOT_ENABLED == 'true'  # forks and fresh clones do nothing until you opt in
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: pip install -r requirements.txt
+      # Your settings are personal and git-ignored: they come from secrets. Either a whole instance folder
+      # (INSTANCE_TAR, made with scripts/instance_secret.sh: config.toml, .env, prompts/, custom.py), or
+      # CONFIG_TOML and VOICE_MD with the other values as separate secrets below.
+      - run: |
+          if [ -n "$INSTANCE_TAR" ]; then
+            mkdir -p instance && printf '%s' "$INSTANCE_TAR" | base64 -d | tar xz -C instance
+            echo "INBOX_HOME=$PWD/instance" >> "$GITHUB_ENV"
+          else
+            printf '%s' "$CONFIG_TOML" > config.toml
+            if [ -n "$VOICE_MD" ]; then printf '%s' "$VOICE_MD" > prompts/voice.md; fi
+            echo "INBOX_HOME=$PWD" >> "$GITHUB_ENV"
+          fi
+        env:
+          INSTANCE_TAR: ${{ secrets.INSTANCE_TAR }}
+          CONFIG_TOML: ${{ secrets.CONFIG_TOML }}
+          VOICE_MD: ${{ secrets.VOICE_MD }}
+      # archive, draft examples and offset between runs
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.INBOX_HOME }}/cache
+          key: cache-${{ github.run_id }}
+          restore-keys: cache-
+      # with INSTANCE_TAR the instance's .env provides these values; secrets set here take precedence
+      - run: python main.py --once
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ALLOWED_USER_IDS: ${{ secrets.TELEGRAM_ALLOWED_USER_IDS }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_INBOX_DB_ID: ${{ secrets.NOTION_INBOX_DB_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
