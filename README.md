@@ -60,7 +60,8 @@ run stops halfway. A lock file prevents two runs at once.
 
 Use the bot in its private chat, or add it to a private group with Topics. In a topic, `/here saved` makes it
 the one for the bot's replies, `/here alerts` the one for errors, and `/here <category>` (or one of its
-hashtag aliases) sends everything written there to that category. The other topics collect items as usual.
+hashtag aliases) sends everything written there to that category, and the replies for items of that category
+land there too, so each such topic becomes the list of that category. The other topics collect items as usual.
 
 Categories listed under `[categories.forced]` are never guessed by the classifier: you pick them with a
 hashtag or a topic, and the item is saved as it is, titled with its first line, with no analysis. Handy for
@@ -174,7 +175,7 @@ bot to it: `INBOX_HOME=instances/mine .venv/bin/python main.py --once`, or `./in
 
 Everything personal stays in the instance folder and out of git:
 
-- `prompts/<name>.md` replaces a built-in prompt: `classify`, `idea`, `sources`, `draft`, `visual`, `agent`.
+- `prompts/<name>.md` replaces a built-in prompt: `classify`, `idea`, `sources`, `draft`, `visual`, `photo`, `agent`.
   Use the same `{placeholders}` as the built-in ones (see the `PROMPT` constants in the code);
 - `custom.py` can replace steps with your own Python: `archive()` (what you published, e.g. joined from
   two databases), `draft_examples()`, `draft_postprocess(text)`, `draft_checks(text, lo, hi)`.

@@ -88,6 +88,36 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(pipeline.forced_category("#PersonalNote buy milk"), "personal_note")
         self.assertIsNone(pipeline.forced_category("#space #nasa"))
 
+    def test_short_transcript_also_gets_frames(self):
+        self.assertTrue(media.needs_frames("", 30))
+        self.assertTrue(media.needs_frames("The", 30))  # Whisper noise on music
+        self.assertFalse(media.needs_frames(" ".join(["word"] * 20), 30))
+        self.assertFalse(media.needs_frames("The", 3600))  # too long: frames say little
+
+    def test_photo_post_is_looked_at(self):
+        photo = {"title": "Post", "author": "acc", "duration": 0, "caption": "", "transcript": "",
+                 "visual": "A slide that says: the haunted doll", "photo": True}
+        classified = {"category": "other", "title": "Haunted doll", "topic": "", "tags": [], "summary": "",
+                      "book_title": "", "book_author": ""}
+        msg = {"message_id": 5, "date": 0, "chat": {"id": 1, "type": "private"},
+               "text": "https://www.instagram.com/p/abc/"}
+        with mock.patch("notion.find_by_url", return_value=None), \
+                mock.patch("media.video", side_effect=RuntimeError("[Instagram] abc: No video formats found!")), \
+                mock.patch("media.photo_post", return_value=photo) as photo_post, \
+                mock.patch("pipeline.web_preview", return_value=""), \
+                mock.patch("pipeline.classify", return_value=classified) as classify, \
+                mock.patch("costs.over_limit", return_value=False), \
+                mock.patch("notion.create_inbox_page", return_value="https://www.notion.so/P-" + "0" * 32) as create:
+            r = pipeline.process(msg)
+        photo_post.assert_called_once_with("https://www.instagram.com/p/abc/")
+        self.assertIn("the haunted doll", classify.call_args[0][0]["context"])
+        props, blocks = create.call_args[0][0], create.call_args[0][1]
+        self.assertEqual(props["Error"]["rich_text"], [])
+        body = " ".join(t["text"]["content"] for b in blocks for t in b[b["type"]]["rich_text"])
+        self.assertIn("the haunted doll", body)
+        self.assertNotIn("No speech", body)  # a photo post has no audio to speak of
+        self.assertTrue(r["deletable"])
+
     def test_write_guard(self):
         with self.assertRaises(PermissionError):
             notion._append("some-other-page", [])

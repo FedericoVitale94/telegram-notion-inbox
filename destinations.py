@@ -1,7 +1,8 @@
 """Where the bot writes: the private chat (as always) or a private group with Topics.
 
 In the group, "/here saved" in a topic makes it the one for the bot's replies, "/here alerts" the one for errors,
-and "/here <category>" (or one of its hashtag aliases) makes everything written in that topic go to that category.
+and "/here <category>" (or one of its hashtag aliases) makes everything written in that topic go to that category,
+and the replies for items of that category go there instead of the saved topic.
 Every other topic collects items as usual. The command and the two words can be changed in [telegram]."""
 import json
 import os
@@ -95,13 +96,17 @@ def topic_category(msg):
     return cfg.get("categories", {}).get(str(thread))
 
 
-def where(kind, msg=None):
+def where(kind, msg=None, category=None):
     """(chat_id, thread_id, reply_to) for a "saved" or "alerts" message.
-    Private chat: a reply to the message, as always. Configured group: the chosen topic.
+    Private chat: a reply to the message, as always. Configured group: the category's topic if it has one,
+    otherwise the chosen topic.
     Without an original message (alerts, drafts, digest): the topic if there is one, otherwise the private chat."""
     cfg = _config()
     if msg and msg["chat"]["type"] == "private":
         return msg["chat"]["id"], None, msg["message_id"]
+    topics = {c: int(t) for t, c in cfg.get("categories", {}).items()}
+    if category in topics and msg and msg["chat"]["id"] == cfg.get("chat_id"):
+        return cfg["chat_id"], topics[category], None
     if cfg.get(kind) is not None and (msg is None or msg["chat"]["id"] == cfg["chat_id"]):
         return cfg["chat_id"], cfg[kind], None
     if msg:  # a group without configured topics: reply where the message arrived

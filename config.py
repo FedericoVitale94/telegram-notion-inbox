@@ -20,7 +20,7 @@ DEFAULT_PROPERTIES = {
     "similar": "Similar content", "draft_written": "Draft written",
 }
 DEFAULT_STATUSES = ["To review", "Good idea", "Discarded", "Used"]  # to review, good idea, discarded, used
-PROMPTS = ("classify", "idea", "sources", "draft", "visual", "agent")
+PROMPTS = ("classify", "idea", "sources", "draft", "visual", "photo", "agent")
 
 
 def load(path=None):

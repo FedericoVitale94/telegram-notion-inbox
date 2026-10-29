@@ -154,6 +154,10 @@ class TestCategorieForzate(Istanza):
         self.assertEqual(destinations.where("saved", msg(GRUPPO, thread=3, text="x")), (-100123, 5, None))
         self.assertEqual(destinations.where("alerts"), (-100123, 9, None))
         self.assertEqual(destinations.where("saved", msg(PRIVATA, text="x")), (42, None, 7))
+        destinations.topic_command(msg(GRUPPO, thread=11, text="/qui ricetta"))  # risposta nel topic della categoria
+        self.assertEqual(destinations.where("saved", msg(GRUPPO, thread=3, text="x"), "ricetta"), (-100123, 11, None))
+        self.assertEqual(destinations.where("saved", msg(GRUPPO, thread=3, text="x"), "guida"), (-100123, 5, None))
+        self.assertEqual(destinations.where("saved", msg(PRIVATA, text="x"), "ricetta"), (42, None, 7))
 
 
 class TestCreator(Istanza):
@@ -430,6 +434,20 @@ class TestParitaConVersionePrecedente(Istanza):
         self.assertIn("Video: bloccato", errore)
         self.assertIn("Classificazione: API giù", errore)
         self.assertFalse(r["deletable"])
+
+    def test_video_social_illeggibile_senza_analisi(self):
+        """L'anteprima di Instagram è solo "Instagram": senza video niente punteggio né accorpamento."""
+        classificato = {"category": "idea_video", "title": "Reel Instagram", "topic": "", "tags": [],
+                        "summary": "", "book_title": "", "book_author": ""}
+        with mock.patch("notion.find_by_url", return_value=None), \
+                mock.patch("media.video", side_effect=Exception("empty media response")), \
+                mock.patch("pipeline.web_preview", return_value="Titolo pagina: Instagram"), \
+                mock.patch("pipeline.classify", return_value=classificato), \
+                mock.patch("costs.over_limit", return_value=False), \
+                mock.patch("ideas.analyze") as analyze, \
+                mock.patch("notion.create_inbox_page", return_value=PAGE_URL):
+            pipeline.process(msg(text="https://www.instagram.com/reel/abc/"))
+        analyze.assert_not_called()
 
     def test_cerca_pubblicati_con_archivio_da_custom(self):
         nomi = [getattr(t, "name", None) or t["name"] for t in agent.tools()]

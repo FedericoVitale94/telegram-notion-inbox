@@ -89,7 +89,7 @@ def handle(msg):
     result = pipeline.process(msg)
     log.info("message %s saved: %s", mid, result["reply"].replace("\n", " | "))
     try:
-        dest_chat, thread, reply_to = destinations.where("saved", msg)
+        dest_chat, thread, reply_to = destinations.where("saved", msg, result.get("category"))
         telegram.reply(dest_chat, result["reply"], reply_to, thread)
         if reply_to is None and not _deleting(result):  # reply in another topic: a reaction on the original
             telegram.react(chat["id"], mid)

@@ -41,7 +41,9 @@ PROMPT_CLASSIFY = """You assist {brand}. Classify the saved item below.
 
 Categories:
 {guide}
-If there is a video transcript and caption, decide mainly from those.
+If there is a video, decide mainly from what it says and shows (transcript, what the video shows): its \
+caption comes second, since reposts often carry a caption about something else. A very short transcript may be \
+noise on music.
 Tags: zero or more, only if relevant.
 Title: at most 8 words, about the content. Topic: one line. Summary: 2-4 sentences, only about what is in \
 the text, no invented facts. Write title, topic and summary in {language}.
@@ -359,7 +361,12 @@ def process(msg):
         except Exception as e:  # e.g. a blocked download: classify with what there is
             log.warning("video not downloaded for message %s: %s", item["message_id"], str(e)[:200])
             item["preview"] = web_preview(url)  # e.g. an Instagram post with only photos: at least the caption
-            if not item["preview"]:
+            if "No video formats" in str(e):  # a photo post or carousel: look at its images
+                try:
+                    item["video"] = media.photo_post(url)
+                except Exception as e2:
+                    log.warning("photo post not read for message %s: %s", item["message_id"], str(e2)[:200])
+            if not item["preview"] and not item.get("video"):
                 errors.append(f"{i18n.t('err_video')}: {e}")
     audio = next((msg[k] for k in AUDIO if k in msg), None)
     if audio:
@@ -395,9 +402,10 @@ def process(msg):
     title = (book if book and c["category"] == config.BOOK else c["title"]) or (
         item["text"] or url or i18n.t("untitled"))[:80]
     analysis = None
-    # without the video's content a score would be made up: no analysis
+    # without the video's content a score would be made up, and an empty page would absorb unrelated links as
+    # duplicates: no analysis (a social page preview is usually just the site name)
     if (config.CREATOR_ON and not limited and c["category"] == config.IDEA and c["title"]
-            and (plat not in SOCIAL or item.get("video") or item["preview"])):
+            and (plat not in SOCIAL or item.get("video"))):
         try:
             analysis = ideas.analyze(item, c)
         except Exception as e:
@@ -483,7 +491,7 @@ def process(msg):
               *notion.section(i18n.t("sec_voice_transcript" if item.get("transcribed") else "sec_original_text"),
                               item["text"]),
               *notion.section(i18n.t("sec_caption"), v.get("caption")),
-              *notion.section(i18n.t("sec_transcript"), v.get("transcript") or (v and i18n.t("no_speech"))),
+              *notion.section(i18n.t("sec_transcript"), v.get("transcript") or (v and not v.get("photo") and i18n.t("no_speech"))),
               *notion.section(i18n.t("sec_visual"), v.get("visual")),
               *notion.section(i18n.t("sec_preview"), item["preview"]),
               *notion.section(i18n.t("sec_summary"), c["summary"]),
@@ -512,4 +520,4 @@ def process(msg):
         reply += f"\n⚠️ {error[:200]}"
     reply = "\n".join([reply, *problems])
     skipped = limited and not note_only and bool(item["text"] or url)  # analysis that the limit prevented
-    return {"reply": reply, "deletable": not error and not problems and not skipped}
+    return {"reply": reply, "deletable": not error and not problems and not skipped, "category": c["category"]}
